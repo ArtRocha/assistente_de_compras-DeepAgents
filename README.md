@@ -11,6 +11,8 @@ This project is a production-grade multi-agent system built using **LangChain De
 
 ## 🛠️ Installation
 
+**Requisito:** Python 3.11 ou superior.
+
 1. **Clone the repository**:
    ```bash
    git clone <repo-url>
