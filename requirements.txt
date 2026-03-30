@@ -1,0 +1,8 @@
+pydantic>=2.0.0
+langchain>=0.1.0
+httpx>=0.24.1
+beautifulsoup4>=4.12.2
+pyyaml>=6.0.1
+fastapi>=0.103.1
+uvicorn>=0.23.2
+# deepagents (If using the specific library mentioned)

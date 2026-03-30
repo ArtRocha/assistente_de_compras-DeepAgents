@@ -1,0 +1,20 @@
+# Agent Configuration
+llm:
+  model: "gpt-4o"
+  temperature: 0.1
+
+orchestrator:
+  role: "Main shopping assistant orchestrator"
+  goal: "Coordinate product discovery, trust analysis, and ranking to find the best product for the user."
+
+product_discovery:
+  role: "Product Search Specialist"
+  goal: "Search across multiple stores to find products matching the user query."
+
+trust_analysis:
+  role: "Store Credibility Analyst"
+  goal: "Evaluate the reputation and trust level of stores using Reclame Aqui data."
+
+ranking:
+  role: "Comparison and Selection Specialist"
+  goal: "Rank the found products based on price, trust, and relevance."
