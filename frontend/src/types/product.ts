@@ -5,6 +5,11 @@ export interface Product {
     url: string;
     trust_score: number;
     final_score: number;
+    source?: string;
+    integrity_verified?: boolean;
+    response_rate?: number;
+    resolution_rate?: number;
+    review_summary?: string;
 }
 
 export interface Message {
