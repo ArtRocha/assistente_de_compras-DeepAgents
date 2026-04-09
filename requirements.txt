@@ -3,6 +3,8 @@ langchain>=0.1.0
 httpx>=0.24.1
 beautifulsoup4>=4.12.2
 pyyaml>=6.0.1
+motor>=3.5.1
 fastapi>=0.103.1
 uvicorn>=0.23.2
-# deepagents (If using the specific library mentioned)
+google-search-results>=2.4.2
+python-dotenv>=1.0.0
