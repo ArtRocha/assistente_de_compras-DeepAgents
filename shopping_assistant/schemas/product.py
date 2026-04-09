@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 
 class Product(BaseModel):
@@ -14,3 +14,12 @@ class Product(BaseModel):
     response_rate: Optional[float] = Field(None, description="Store complaint response rate from 0 to 1")
     resolution_rate: Optional[float] = Field(None, description="Store complaint resolution rate from 0 to 1")
     review_summary: Optional[str] = Field(None, description="Short explanation of the trust analysis")
+    trust_label: Optional[str] = Field(None, description="Trust classification label such as alta, moderada or baixa")
+    trust_reasons: Optional[List[str]] = Field(
+        default=None,
+        description="Objective reasons used to justify why the store was approved or rejected",
+    )
+    trust_metrics: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Raw trust metrics used by the validation engine",
+    )

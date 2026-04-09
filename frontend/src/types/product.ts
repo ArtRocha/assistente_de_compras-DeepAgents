@@ -10,6 +10,9 @@ export interface Product {
     response_rate?: number;
     resolution_rate?: number;
     review_summary?: string;
+    trust_label?: string;
+    trust_reasons?: string[];
+    trust_metrics?: Record<string, unknown>;
 }
 
 export interface Message {
