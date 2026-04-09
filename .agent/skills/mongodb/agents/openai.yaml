@@ -1,0 +1,3 @@
+﻿display_name: MongoDB Cache de Validacao
+short_description: Persistencia de cache e eventos do fluxo de agentes
+default_prompt: Implemente e use MongoDB para consultar cache de lojas validadas antes do verificador e registrar eventos do processo completo.

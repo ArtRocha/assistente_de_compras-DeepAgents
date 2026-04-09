@@ -1,6 +1,12 @@
 import asyncio
 import sys
 import json
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Carrega variáveis do .env antes de qualquer import que use os.getenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+
 from shopping_assistant.agents.orchestrator import OrchestratorAgent
 
 async def main():

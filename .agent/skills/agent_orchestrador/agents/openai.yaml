@@ -1,0 +1,3 @@
+﻿display_name: Agent Orchestrador
+short_description: Coordena discovery, trust e ranking com limites de carga
+default_prompt: Orquestre o fluxo de agentes de compras com controle de concorrência, execução em etapas e finalização segura.

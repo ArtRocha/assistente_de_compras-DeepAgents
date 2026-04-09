@@ -1,5 +1,12 @@
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Carrega variáveis do .env antes de qualquer import que use os.getenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi import Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
@@ -21,6 +28,19 @@ orchestrator = OrchestratorAgent()
 
 class SearchRequest(BaseModel):
     query: str
+
+
+@app.get("/api/orchestrator/status")
+async def orchestrator_status() -> Dict[str, Any]:
+    return await orchestrator.get_runtime_status()
+
+
+@app.get("/api/orchestrator/events")
+async def orchestrator_events(
+    limit: int = Query(default=50, ge=1, le=500),
+    workflow_id: int | None = Query(default=None),
+) -> List[Dict[str, Any]]:
+    return await orchestrator.get_recent_events(limit=limit, workflow_id=workflow_id)
 
 
 @app.post("/api/search")

@@ -1,52 +1,89 @@
 import asyncio
+import re
 from typing import List
+
 from ..schemas.product import Product
+from ..services.normalization import NormalizationService
+from .search_api import SearchAPI
 
 
 class Scraper:
-    """Secondary simulated scraper that complements shopping search coverage."""
+    """Secondary Google Shopping scraper that performs live extraction with query variations."""
+
+    def __init__(self):
+        self.search_api = SearchAPI()
 
     async def scrape(self, query: str) -> List[Product]:
-        await asyncio.sleep(0.6)
-
         normalized_query = query.strip()
-        lower_query = normalized_query.lower()
+        if not normalized_query:
+            return []
 
-        if "iphone" in lower_query:
-            return [
-                Product(
-                    title=f"{normalized_query} Apple 128GB",
-                    price=4379.90,
-                    store="Casas Bahia",
-                    url="https://www.casasbahia.com.br/iphone-128gb",
-                    source="shopping_scraper",
-                ),
-                Product(
-                    title=f"{normalized_query} Apple 128GB",
-                    price=4550.00,
-                    store="Ponto",
-                    url="https://www.ponto.com.br/iphone-128gb",
-                    source="shopping_scraper",
-                ),
-            ]
+        print(f"[Scraper] Iniciando scraping para consulta base: '{normalized_query}'")
+        query_variants = self._build_query_variants(normalized_query)
+        print(f"[Scraper] Variações geradas: {query_variants}")
+        if not query_variants:
+            return []
 
-        if "ps5" in lower_query or "playstation 5" in lower_query:
-            return [
-                Product(
-                    title=f"{normalized_query} Console Sony",
-                    price=3429.90,
-                    store="Casas Bahia",
-                    url="https://www.casasbahia.com.br/ps5-console-sony",
-                    source="shopping_scraper",
-                )
-            ]
+        tasks = [self.search_api.search(variant) for variant in query_variants]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        return [
-            Product(
-                title=f"{normalized_query} - oferta adicional",
-                price=1929.90,
-                store="Fast Shop",
-                url="https://www.fastshop.com.br/oferta-adicional",
-                source="shopping_scraper",
-            )
+        combined: List[Product] = []
+        for i, result in enumerate(results):
+            variant = query_variants[i]
+            if isinstance(result, Exception):
+                print(f"[Scraper] ERRO na variação '{variant}': {result}")
+                continue
+            print(f"[Scraper] Variação '{variant}' retornou {len(result)} resultados.")
+            combined.extend(result)
+
+        if not combined:
+            return []
+
+        normalized = NormalizationService.normalize_list(combined)
+        print(f"[Scraper] Total consolidado antes do filtro: {len(normalized)}")
+        relevant = [p for p in normalized if NormalizationService.fuzzy_match(normalized_query, p.title)]
+        print(f"[Scraper] Total após filtro de relevância (fuzzy match): {len(relevant)}")
+        
+        final_results = relevant[:20]
+        print(f"[Scraper] Lista final retornou {len(final_results)} resultados válidos.")
+        return final_results
+
+    def _build_query_variants(self, query: str) -> List[str]:
+        base = query.strip()
+        compact = re.sub(r"\s+", " ", base)
+
+        variants = [
+            compact,
+            f"{compact} preco",
+            f"{compact} comprar",
+            self._remove_common_prefixes(compact),
         ]
+
+        seen = set()
+        unique_variants: List[str] = []
+        for variant in variants:
+            candidate = variant.strip()
+            if not candidate:
+                continue
+            key = candidate.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_variants.append(candidate)
+
+        return unique_variants[:4]
+
+    def _remove_common_prefixes(self, query: str) -> str:
+        lowered = query.lower().strip()
+        prefixes = [
+            "melhores precos de ",
+            "melhores preços de ",
+            "preco de ",
+            "preço de ",
+            "onde comprar ",
+            "comprar ",
+        ]
+        for prefix in prefixes:
+            if lowered.startswith(prefix):
+                return query[len(prefix):].strip()
+        return query

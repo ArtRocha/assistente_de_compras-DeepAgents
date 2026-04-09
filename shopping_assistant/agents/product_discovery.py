@@ -1,4 +1,3 @@
-import asyncio
 from typing import List
 from ..tools.search_api import SearchAPI
 from ..tools.scraper import Scraper
@@ -14,16 +13,23 @@ class ProductDiscoveryAgent:
         self.scraper_tool = Scraper()
 
     async def run(self, query: str) -> List[Product]:
-        print(f"[ProductDiscoveryAgent] Pesquisando ofertas para: {query}")
+        normalized_query = query.strip()
+        if not normalized_query:
+            return []
 
-        search_results, scraped_results = await asyncio.gather(
-            self.search_tool.search(query),
-            self.scraper_tool.scrape(query),
-        )
+        print(f"[ProductDiscoveryAgent] Pesquisando ofertas para: {normalized_query}")
+
+        search_results = await self.search_tool.search(normalized_query)
+        scraped_results: List[Product] = []
+
+        # Scraper auxiliar (tambem live) apenas quando a busca principal vier fraca.
+        if len(search_results) < 3:
+            print("[ProductDiscoveryAgent] Busca principal com baixa cobertura; acionando scraper live.")
+            scraped_results = await self.scraper_tool.scrape(normalized_query)
 
         all_products = search_results + scraped_results
         normalized = NormalizationService.normalize_list(all_products)
-        relevant = [p for p in normalized if NormalizationService.fuzzy_match(query, p.title)]
+        relevant = [p for p in normalized if NormalizationService.fuzzy_match(normalized_query, p.title)]
 
         print(f"[ProductDiscoveryAgent] {len(relevant)} ofertas relevantes encontradas.")
         return relevant
