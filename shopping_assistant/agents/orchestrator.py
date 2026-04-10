@@ -73,7 +73,7 @@ class OrchestratorAgent:
                     )
                     return []
 
-                ranked_results = await self.ranking_agent.run(products_with_trust)
+                ranked_results = await self.ranking_agent.run(products_with_trust, query=normalized_query)
                 print(f"[Orchestrator:{workflow_id}] Finished processing.")
                 await self._safe_log_event(
                     "orchestrator_workflow_finished",

@@ -1,8 +1,13 @@
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Adiciona a raiz do projeto ao path do Python para evitar ModuleNotFoundError
+root_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(root_dir))
+
 # Carrega variáveis do .env antes de qualquer import que use os.getenv()
-load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+load_dotenv(dotenv_path=root_dir / ".env")
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
