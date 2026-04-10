@@ -86,9 +86,13 @@ class StoreValidationEngine:
 
     async def validate_store(self, store_name: str, product_url: str) -> Dict[str, Any]:
         normalized_store = self._normalize_store_name(store_name)
-        baseline = self._STORE_METRICS.get(
-            normalized_store,
-            {
+        domain = self._extract_domain(product_url)
+        catalog_store_key = self._resolve_catalog_store_key(normalized_store, domain)
+        if catalog_store_key:
+            baseline = self._STORE_METRICS[catalog_store_key]
+            baseline_source = "catalog"
+        else:
+            baseline = {
                 "display_name": store_name,
                 "reclame_aqui_rating": 5.5,
                 "trustpilot_rating": 2.0,
@@ -96,10 +100,9 @@ class StoreValidationEngine:
                 "resolution_rate": 0.55,
                 "years_online": 3,
                 "official_domains": [],
-            },
-        )
+            }
+            baseline_source = "heuristic_default"
 
-        domain = self._extract_domain(product_url)
         domain_match = self._compute_domain_match_score(domain, baseline["official_domains"], normalized_store)
         https_score = 1.0 if product_url.lower().startswith("https://") else 0.0
         domain_reputation = self._compute_domain_reputation_score(domain)
@@ -125,12 +128,21 @@ class StoreValidationEngine:
             4,
         )
 
-        approved = (
-            final_score >= 0.65
-            and response_rate >= 0.65
-            and resolution_rate >= 0.65
-            and security_score >= 0.55
-        )
+        if baseline_source == "catalog":
+            approved = (
+                final_score >= 0.65
+                and response_rate >= 0.65
+                and resolution_rate >= 0.65
+                and security_score >= 0.55
+            )
+        else:
+            # For unknown stores (without catalog signal), rely more on domain/URL safety.
+            approved = (
+                final_score >= 0.58
+                and security_score >= 0.70
+                and domain_match >= 0.60
+                and domain_reputation >= 0.80
+            )
         trust_label = self._classify_trust(final_score)
         risk_flags = self._build_risk_flags(domain, domain_match, response_rate, resolution_rate, final_score)
         reasons = self._build_reasons(
@@ -159,6 +171,7 @@ class StoreValidationEngine:
             "domain_match_score": domain_match,
             "domain_reputation_score": domain_reputation,
             "domain": domain,
+            "baseline_source": baseline_source,
             "risk_flags": risk_flags,
             "reasons": reasons,
             "comment_summary": reasons[0],
@@ -176,6 +189,17 @@ class StoreValidationEngine:
         if host.startswith("www."):
             host = host[4:]
         return host
+
+    def _resolve_catalog_store_key(self, normalized_store: str, domain: str) -> str | None:
+        if normalized_store in self._STORE_METRICS:
+            return normalized_store
+        if not domain:
+            return None
+        for key, metrics in self._STORE_METRICS.items():
+            for official_domain in metrics.get("official_domains", []):
+                if domain == official_domain or domain.endswith(f".{official_domain}"):
+                    return key
+        return None
 
     def _compute_domain_match_score(self, domain: str, official_domains: List[str], normalized_store: str) -> float:
         if not domain:
