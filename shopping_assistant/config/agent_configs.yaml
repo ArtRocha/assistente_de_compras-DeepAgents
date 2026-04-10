@@ -1,6 +1,10 @@
 # Agent Configuration
+# Provider: Ollama (local, gratuito)
+# Para trocar de modelo: altere 'model' abaixo ou defina OLLAMA_MODEL no .env
 llm:
-  model: "gpt-4o"
+  provider: "ollama"
+  base_url: "http://localhost:11434"
+  model: "llama2:7b"
   temperature: 0.1
 
 orchestrator:
@@ -13,7 +17,7 @@ product_discovery:
 
 trust_analysis:
   role: "Store Credibility Analyst"
-  goal: "Evaluate the reputation and trust level of stores using Reclame Aqui data."
+  goal: "Evaluate the reputation and trust level of stores using objective metrics."
 
 ranking:
   role: "Comparison and Selection Specialist"
